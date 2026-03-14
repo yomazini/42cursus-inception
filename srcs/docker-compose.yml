@@ -1,0 +1,152 @@
+services:
+  mariadb:
+    container_name: mariadb
+    image: mariadb
+    restart: on-failure
+    env_file: .env
+    build: requirements/mariadb
+    volumes: 
+      - mariadb:/var/lib/mysql
+    networks: 
+      - docker-network
+    secrets:
+      - db_root_password
+      - db_password
+
+  wordpress:
+    container_name: wordpress
+    image: wordpress
+    restart: on-failure
+    env_file: .env
+    build: requirements/wordpress
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - docker-network
+    depends_on:
+      - mariadb
+      - redis
+    secrets:
+      - db_password
+      - wp_password
+      - wp_admin_password
+
+  nginx:
+    container_name: nginx
+    image: nginx
+    restart: on-failure
+    env_file: .env
+    build: requirements/nginx
+    volumes:
+      - wordpress:/var/www/html
+    ports:
+      - "443:443"
+    networks:
+      - docker-network
+    depends_on:
+      - wordpress
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: on-failure
+    build: requirements/bonus/adminer
+    networks:
+      - docker-network
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mariadb
+
+  redis:
+    container_name: redis
+    image: redis
+    restart: on-failure
+    build: requirements/bonus/redis
+    networks:
+      - docker-network
+
+  ftp:
+    container_name: ftp
+    image: ftp
+    restart: on-failure
+    build: requirements/bonus/ftp
+    env_file: .env
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - docker-network
+    ports:
+      - "21:21"
+      - "20:20"
+      - "21702-21712:21702-21712"
+    secrets:
+      - ftp_password
+    depends_on:
+      - wordpress
+
+  portainer:
+    container_name: portainer
+    image: portainer
+    restart: on-failure
+    build: requirements/bonus/portainer
+    ports:
+      - "9000:9000"
+    networks:
+      - docker-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+
+  static-site:
+    container_name: static-site
+    image: static-site
+    restart: on-failure
+    build: requirements/bonus/static-site
+    ports:
+      - "7777:80"
+    networks:
+      - docker-network
+
+
+
+volumes:
+  mariadb: 
+    driver: local
+    driver_opts:
+      device: /home/ymazini/data/mariadb
+      type: none
+      o: bind
+  wordpress:
+    driver: local
+    driver_opts:
+      device: /home/ymazini/data/wordpress
+      type: none
+      o: bind
+  portainer:
+    driver: local
+    driver_opts:
+      device: /home/ymazini/data/portainer 
+      type: none
+      o: bind
+
+
+
+networks:
+  docker-network:
+    name: docker-network
+    driver: bridge
+
+
+    
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_password:
+    file: ../secrets/db_password.txt
+  wp_password:
+    file: ../secrets/wp_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt

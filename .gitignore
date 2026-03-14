@@ -1,0 +1,5 @@
+.vscode
+ # .gitignore
+secrets
+ .env
+ srcs/.env
