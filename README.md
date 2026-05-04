@@ -1,5 +1,8 @@
 *This project has been created as part of the 42 curriculum by ymazini.*
 
+NOTE: Forbidden to add .env files or secrets per subject requirements; Only designed for easy plug-and-play functionality.
+
+
 # Inception (42 Project)
 
 ![Inception Architecture](resources/Inception_arch.png)
